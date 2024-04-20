@@ -174,32 +174,38 @@ class Feed extends Component {
     formData.append('content', postData.content);
     formData.append('image', postData.image);
 
-    let graphqlQuery = {
-      query: `
+    let graphqlQuery = {query: `
         mutation {
           createPost(postInput: {title: "${postData.title}", imageUrl: "image url", content: "${postData.content}"}) {
             _id
             title
+            content
+            imageUrl
+            creator {
+              name
+            }
+            createdAt
           }
         }
-      `
-    }
+      `};
     fetch("http://localhost:8080/graphql", {
       method: "POST",
       body: JSON.stringify(graphqlQuery),
       headers: {
         Authorization: 'Bearer ' + this.props.token,
-      }
+        "Content-Type": "application/json",
+      },
     })
       .then(res => {
         return res.json();
       })
       .then(resData => {
+        console.log(resData.errors);
         if (resData.errors && resData.errors[0].code === 422) {
           throw new Error("Validation failed.");
         }
         if (resData.errors) {
-          throw new Error('User creation failed.')
+          throw new Error('Post creation failed.')
         }
         console.log(resData);
         const post = {
